@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trip Details | Travel With Yousuf</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="trip.css" />
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span>Follow us</span>
+    <span>✉ info@natureholidaysonline.com</span>
+    <span>📞 +91 6005944808</span>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">🌿 Travel With Yousuf</div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#about">About us</a></li>
+      <li><a href="index.html#packages">Packages</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="index.html#contact">Contact us</a></li>
+    </ul>
+  </nav>
+
+  <!-- BREADCRUMB -->
+  <div class="breadcrumb-bar">
+    <a href="index.html">Home</a>
+    <span>›</span>
+    <a href="index.html#packages">Packages</a>
+    <span>›</span>
+    <span id="breadcrumbName">Trip</span>
+  </div>
+
+  <!-- TRIP HERO -->
+  <section class="trip-hero" id="tripHero">
+    <div class="trip-hero-overlay">
+      <h1 id="tripTitle"></h1>
+    </div>
+  </section>
+
+  <!-- GALLERY -->
+  <div class="trip-gallery">
+    <div class="gallery-main"><img id="galleryImg1" src="" alt="" /></div>
+    <div class="gallery-side">
+      <img id="galleryImg2" src="" alt="" />
+      <img id="galleryImg3" src="" alt="" />
+    </div>
+  </div>
+
+  <!-- TRIP BODY -->
+  <div class="trip-body">
+
+    <div class="trip-content">
+      <h2 id="tripName"></h2>
+      <p class="trip-description" id="tripDescription"></p>
+
+      <div class="trip-why">
+        <h3>What makes this trip easier</h3>
+        <ul>
+          <li>✅ Local travel partners who listen</li>
+          <li>✅ Flexible dates &amp; clear quotes</li>
+          <li>✅ Day plans shared before you go</li>
+        </ul>
+      </div>
+
+      <div class="trip-plan">
+        <h3>Tour plan</h3>
+        <div id="planDays"></div>
+      </div>
+
+      <div class="inc-exc">
+        <div class="inc">
+          <h3>✅ What's included</h3>
+          <ul id="included"></ul>
+        </div>
+        <div class="exc">
+          <h3>❌ What's not included</h3>
+          <ul id="excluded"></ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="trip-sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-price">
+          <span>Starts from</span>
+          <strong id="sidebarPrice"></strong>
+          <span>/ per person</span>
+        </div>
+        <div class="sidebar-meta" id="sidebarMeta"></div>
+        <a href="index.html#contact" class="btn-primary" style="display:block;text-align:center;margin-top:20px;">Book this trip</a>
+        <a href="https://wa.me/916005944808" target="_blank" class="btn-whatsapp">💬 Chat on WhatsApp</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="contact">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="logo">🌿 Travel With Yousuf</div>
+        <p>Warm local care for every journey — from college tours to family holidays.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick links</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="index.html#about">About us</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Packages</h4>
+        <ul>
+          <li><a href="#">International packages</a></li>
+          <li><a href="#">Domestic packages</a></li>
+          <li><a href="#">FIT packages</a></li>
+          <li><a href="#">Visa</a></li>
+          <li><a href="#">Passport</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact us</h4>
+        <p>4th floor, Isaacs centre square, RM road, Sultan Bathery, Kerala</p>
+        <p>✉ info@natureholidaysonline.com</p>
+        <p>📞 +91 6005944808</p>
+        <p>📞 +91 9747410408</p>
+        <p>📞 +91 9447410408</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Copyright © Travel With Yousuf All Rights Reserved.</span>
+      <div>
+        <a href="#">Terms of use</a>
+        <a href="#">Privacy policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="trips-data.js"></script>
+  <script src="trip.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
