@@ -192,3 +192,19 @@
   .breadcrumb-bar { padding: 12px 20px; }
   .sidebar-card { position: static; }
 }
+
+@media (max-width: 480px) {
+  .trip-hero { height: 220px; }
+  .trip-hero-overlay h1 { font-size: 26px; letter-spacing: 1px; }
+  .trip-gallery { margin-top: 16px; }
+  .gallery-main img { height: 200px; border-radius: 8px; }
+  .gallery-side { grid-template-columns: 1fr 1fr; }
+  .gallery-side img { height: 96px; }
+  .trip-body { margin: 28px auto 48px; gap: 28px; }
+  .trip-content h2 { font-size: 20px; }
+  .trip-description { font-size: 14px; }
+  .sidebar-price strong { font-size: 28px; }
+  .sidebar-card { padding: 20px; }
+  .inc-exc { gap: 12px; }
+  .plan-day { padding: 0 0 20px 18px; }
+}
