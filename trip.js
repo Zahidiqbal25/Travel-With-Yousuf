@@ -1,19 +1,34 @@
 const params = new URLSearchParams(window.location.search);
 const id = params.get('id');
-const trip = tripsData[id];
 
-if (!trip) {
-  document.querySelector('.trip-body').innerHTML =
-    '<p style="padding:60px 40px;font-size:18px;color:#6b7280;">Trip not found. <a href="index.html" style="color:#1a6b3c;font-weight:600;">Go back home</a></p>';
-} else {
+async function loadTrip(tripId) {
+  if (window.location.protocol !== 'file:') {
+    try {
+      const res = await fetch(`/api/trips/${tripId}`);
+      if (res.ok) return res.json();
+    } catch (_) {}
+  }
+
+  const trips = await loadTrips();
+  const trip = trips.find(t => t.id === tripId);
+  if (!trip) throw new Error('Trip not found');
+  return trip;
+}
+
+loadTrip(id)
+  .then(trip => renderTrip(trip))
+  .catch(() => {
+    document.querySelector('.trip-body').innerHTML =
+      '<p style="padding:60px 40px;font-size:18px;color:#6b7280;">Trip not found. <a href="index.html" style="color:#1a6b3c;font-weight:600;">Go back home</a></p>';
+  });
+
+function renderTrip(trip) {
   document.title = trip.name + ' | Travel With Yousuf';
   document.getElementById('breadcrumbName').textContent = trip.name;
 
-  // Hero
   document.getElementById('tripHero').style.backgroundImage = `url('${trip.heroImage}')`;
   document.getElementById('tripTitle').textContent = trip.title;
 
-  // Gallery
   document.getElementById('galleryImg1').src = trip.images[0];
   document.getElementById('galleryImg1').alt = trip.name;
   document.getElementById('galleryImg2').src = trip.images[1];
@@ -21,11 +36,9 @@ if (!trip) {
   document.getElementById('galleryImg3').src = trip.images[2];
   document.getElementById('galleryImg3').alt = trip.name;
 
-  // Content
   document.getElementById('tripName').textContent = trip.name;
   document.getElementById('tripDescription').textContent = trip.description;
 
-  // Tour plan
   document.getElementById('planDays').innerHTML = trip.days.map(d => `
     <div class="plan-day">
       <h4>${d.day}</h4>
@@ -33,14 +46,11 @@ if (!trip) {
     </div>
   `).join('');
 
-  // Inclusions / exclusions
   document.getElementById('included').innerHTML = trip.included.map(i => `<li>${i}</li>`).join('');
   document.getElementById('excluded').innerHTML = trip.excluded.map(i => `<li>${i}</li>`).join('');
 
-  // Sidebar price
   document.getElementById('sidebarPrice').textContent = trip.price;
 
-  // Sidebar meta
   const meta = [
     { icon: '🕐', label: 'Duration',       value: trip.duration },
     { icon: '👥', label: 'Package type',   value: trip.type },

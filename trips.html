@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>All Trips | Travel With Yousuf</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .trips-hero {
+      background: linear-gradient(135deg, #e8f5ee 0%, #f0faf4 100%);
+      padding: 64px 40px 48px;
+      text-align: center;
+    }
+    .trips-hero h1 { font-size: clamp(28px, 5vw, 52px); font-weight: 800; margin-bottom: 12px; }
+    .trips-hero p { color: var(--gray); font-size: 16px; }
+
+    .trips-controls {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 40px 0;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      flex: 1;
+      min-width: 220px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 11px 16px 11px 42px;
+      border: 1px solid #d1d5db;
+      border-radius: 50px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      outline: none;
+      transition: border-color .2s;
+    }
+    .search-box input:focus { border-color: var(--green); }
+    .search-box svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+
+    .sort-select {
+      padding: 11px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 50px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+    .sort-select:focus { border-color: var(--green); }
+
+    .trips-count { font-size: 14px; color: var(--gray); font-weight: 500; }
+
+    .all-trips-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 40px 80px;
+    }
+    .all-trips-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+    .no-results {
+      grid-column: 1/-1;
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--gray);
+    }
+    .no-results div { font-size: 48px; margin-bottom: 12px; }
+
+    @media (max-width: 1024px) { .all-trips-grid { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 768px) {
+      .trips-hero { padding: 48px 20px 36px; }
+      .trips-controls { padding: 24px 20px 0; }
+      .all-trips-section { padding: 20px 20px 60px; }
+      .all-trips-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    }
+    @media (max-width: 480px) {
+      .all-trips-grid { grid-template-columns: 1fr; }
+      .trips-controls { flex-direction: column; align-items: stretch; }
+      .sort-select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <span>Follow us</span>
+    <span>✉ travelwithyousuf@gmail.com</span>
+    <span>📞 +91 6005944808</span>
+  </div>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">🌿 Travel With Yousuf</div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html#about">About us</a></li>
+      <li><a href="trips.html">Packages</a></li>
+      <li><a href="#">Blog</a></li>
+      <li><a href="index.html#contact">Contact us</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <div class="trips-hero">
+    <p class="tag">Explore Kashmir</p>
+    <h1>All Kashmir Trips</h1>
+    <p>Handpicked journeys for every kind of traveler</p>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="trips-controls">
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search trips..." />
+    </div>
+    <select class="sort-select" id="sortSelect">
+      <option value="default">Sort: Default</option>
+      <option value="price-asc">Price: Low to High</option>
+      <option value="price-desc">Price: High to Low</option>
+      <option value="rating">Top Rated</option>
+    </select>
+    <span class="trips-count" id="tripsCount"></span>
+  </div>
+
+  <!-- TRIPS GRID -->
+  <div class="all-trips-section">
+    <div class="all-trips-grid" id="allTripsGrid">
+      <div class="no-results"><div>🏔️</div><p>Loading trips...</p></div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer" id="contact">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="logo">🌿 Travel With Yousuf</div>
+        <p>Warm local care for every journey — from college tours to family holidays.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Quick links</h4>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="index.html#about">About us</a></li>
+          <li><a href="#">Blog</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Contact us</h4>
+        <p>Srinagar J&K</p>
+        <p>✉ travelwithyousuf@gmail.com</p>
+        <p>📞 +91 6005944808</p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>Copyright © Travel With Yousuf All Rights Reserved.</span>
+      <div>
+        <a href="#">Terms of use</a>
+        <a href="#">Privacy policy</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="load-trips.js"></script>
+  <script>
+    // Navbar
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
+    hamburger.addEventListener('click', () => navLinks.classList.toggle('open'));
+    navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+    window.addEventListener('scroll', () => {
+      document.querySelector('.navbar').style.boxShadow =
+        window.scrollY > 10 ? '0 2px 16px rgba(0,0,0,.12)' : '0 1px 8px rgba(0,0,0,.08)';
+    });
+
+    let allTrips = [];
+
+    function priceNum(str) {
+      return parseInt((str || '0').replace(/[^\d]/g, ''), 10);
+    }
+
+    function renderGrid(trips) {
+      const grid = document.getElementById('allTripsGrid');
+      document.getElementById('tripsCount').textContent = `${trips.length} trip${trips.length !== 1 ? 's' : ''} found`;
+      if (!trips.length) {
+        grid.innerHTML = `<div class="no-results"><div>🔍</div><p>No trips match your search.</p></div>`;
+        return;
+      }
+      grid.innerHTML = trips.map(tripCardHtml).join('');
+    }
+
+    function applyFilters() {
+      const query = document.getElementById('searchInput').value.toLowerCase();
+      const sort = document.getElementById('sortSelect').value;
+      let filtered = allTrips.filter(t =>
+        (t.name || '').toLowerCase().includes(query) ||
+        (t.location || '').toLowerCase().includes(query) ||
+        (t.badge || '').toLowerCase().includes(query)
+      );
+      if (sort === 'price-asc')  filtered.sort((a, b) => priceNum(a.price) - priceNum(b.price));
+      if (sort === 'price-desc') filtered.sort((a, b) => priceNum(b.price) - priceNum(a.price));
+      if (sort === 'rating')     filtered.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
+      renderGrid(filtered);
+    }
+
+    document.getElementById('searchInput').addEventListener('input', applyFilters);
+    document.getElementById('sortSelect').addEventListener('change', applyFilters);
+
+    loadTrips()
+      .then(trips => { allTrips = trips; applyFilters(); })
+      .catch(err => {
+        document.getElementById('allTripsGrid').innerHTML =
+          `<div class="no-results"><div>⚠️</div><p>${err.message || 'Could not load trips.'}</p></div>`;
+      });
+  </script>
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – Travel With Yousuf</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f3f4f6; color: #111827; }
+
+    .topbar { background: #1a6b3c; color: #fff; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar h1 { font-size: 18px; font-weight: 700; }
+    .topbar a { color: #a7f3d0; font-size: 14px; text-decoration: none; }
+    .topbar a:hover { color: #fff; }
+
+    .layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 52px); }
+
+    /* SIDEBAR */
+    .sidebar { background: #fff; border-right: 1px solid #e5e7eb; padding: 24px 0; }
+    .sidebar-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #9ca3af; text-transform: uppercase; padding: 0 20px 12px; }
+    .trip-list { list-style: none; }
+    .trip-list li { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; cursor: pointer; border-left: 3px solid transparent; transition: all .15s; }
+    .trip-list li:hover { background: #f9fafb; }
+    .trip-list li.active { background: #f0fdf4; border-left-color: #1a6b3c; }
+    .trip-list li .trip-name { font-size: 14px; font-weight: 500; }
+    .trip-list li .trip-price { font-size: 12px; color: #6b7280; }
+    .trip-list li .del-btn { background: none; border: none; cursor: pointer; color: #ef4444; font-size: 16px; padding: 2px 6px; border-radius: 4px; opacity: 0; transition: opacity .15s; }
+    .trip-list li:hover .del-btn { opacity: 1; }
+    .add-btn { display: flex; align-items: center; gap: 8px; margin: 16px 20px 0; padding: 10px 16px; background: #1a6b3c; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: calc(100% - 40px); justify-content: center; }
+    .add-btn:hover { background: #155c32; }
+
+    /* MAIN */
+    .main { padding: 32px; overflow-y: auto; }
+    .main h2 { font-size: 22px; font-weight: 800; margin-bottom: 24px; }
+
+    .empty-state { text-align: center; padding: 80px 20px; color: #9ca3af; }
+    .empty-state p { font-size: 16px; margin-top: 12px; }
+
+    /* FORM */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+    label { font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .5px; }
+    input, textarea, select { padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; font-family: inherit; background: #fff; transition: border-color .15s; }
+    input:focus, textarea:focus { outline: none; border-color: #1a6b3c; }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .section-label { font-size: 13px; font-weight: 700; color: #374151; margin: 24px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #e5e7eb; grid-column: 1/-1; }
+
+    .dynamic-list { grid-column: 1/-1; }
+    .dynamic-list .list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .dynamic-list .list-header label { margin: 0; }
+    .add-item-btn { background: none; border: 1px solid #1a6b3c; color: #1a6b3c; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .add-item-btn:hover { background: #f0fdf4; }
+    .list-item { display: flex; gap: 8px; margin-bottom: 8px; align-items: flex-start; }
+    .list-item input, .list-item textarea { flex: 1; }
+    .list-item .remove-item { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; padding: 8px 4px; flex-shrink: 0; }
+
+    .day-item { display: grid; grid-template-columns: 1fr 2fr auto; gap: 8px; margin-bottom: 8px; align-items: start; }
+
+    .form-actions { grid-column: 1/-1; display: flex; gap: 12px; margin-top: 8px; }
+    .btn-save { background: #1a6b3c; color: #fff; border: none; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-save:hover { background: #155c32; }
+    .btn-cancel { background: #fff; color: #374151; border: 1px solid #d1d5db; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
+    .btn-cancel:hover { background: #f9fafb; }
+
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #111827; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all .25s; pointer-events: none; z-index: 999; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast.error { background: #ef4444; }
+
+    .confirm-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; z-index: 100; display: none; }
+    .confirm-box { background: #fff; border-radius: 12px; padding: 28px 32px; max-width: 380px; width: 90%; text-align: center; }
+    .confirm-box h3 { font-size: 18px; margin-bottom: 8px; }
+    .confirm-box p { color: #6b7280; font-size: 14px; margin-bottom: 24px; }
+    .confirm-actions { display: flex; gap: 12px; justify-content: center; }
+    .btn-confirm-del { background: #ef4444; color: #fff; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .btn-confirm-cancel { background: #fff; border: 1px solid #d1d5db; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+    /* IMAGE PICKER */
+    .img-picker { display: flex; gap: 14px; align-items: stretch; }
+    .img-preview {
+      width: 140px; height: 100px; flex-shrink: 0;
+      border: 1px dashed #d1d5db; border-radius: 8px;
+      background: #f9fafb center/cover no-repeat;
+      display: flex; align-items: center; justify-content: center;
+      color: #9ca3af; font-size: 12px; overflow: hidden; position: relative;
+    }
+    .img-preview.has-image { border-style: solid; border-color: #e5e7eb; }
+    .img-preview .clear-img {
+      position: absolute; top: 4px; right: 4px;
+      background: rgba(0,0,0,.55); color: #fff; border: none;
+      width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
+      font-size: 12px; display: none; align-items: center; justify-content: center;
+    }
+    .img-preview.has-image:hover .clear-img { display: flex; }
+    .img-picker-controls { flex: 1; display: flex; flex-direction: column; gap: 8px; justify-content: center; }
+    .img-picker-controls .pick-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; border: 1px solid #1a6b3c; color: #1a6b3c;
+      padding: 9px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; width: fit-content;
+    }
+    .img-picker-controls .pick-btn:hover { background: #f0fdf4; }
+    .img-picker-controls .pick-btn:disabled { opacity: .55; cursor: wait; }
+    .img-picker-controls .path-input { font-size: 13px; }
+    .img-picker-controls .hint { font-size: 11px; color: #9ca3af; }
+    .img-picker input[type="file"] { display: none; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>🌿 Travel With Yousuf — Admin</h1>
+    <a href="index.html" target="_blank">View website →</a>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="sidebar-title">All Trips</div>
+      <ul class="trip-list" id="tripList"></ul>
+      <button class="add-btn" id="addBtn">+ Add new trip</button>
+    </aside>
+
+    <main class="main" id="main">
+      <div class="empty-state">
+        <div style="font-size:48px">🏔️</div>
+        <p>Select a trip to edit, or click <strong>Add new trip</strong></p>
+      </div>
+    </main>
+  </div>
+
+  <!-- Delete confirm dialog -->
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <h3>Delete trip?</h3>
+      <p id="confirmMsg">This cannot be undone.</p>
+      <div class="confirm-actions">
+        <button class="btn-confirm-del" id="confirmDelBtn">Delete</button>
+        <button class="btn-confirm-cancel" id="confirmCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const API = '/api/trips';
+    let trips = [];
+    let editingId = null;
+    let pendingDeleteId = null;
+
+    // ── FETCH & RENDER SIDEBAR ────────────────────────────────────────────────
+    async function loadTrips() {
+      const res = await fetch(API);
+      trips = await res.json();
+      renderSidebar();
+    }
+
+    function renderSidebar() {
+      const list = document.getElementById('tripList');
+      list.innerHTML = trips.map(t => `
+        <li data-id="${t.id}" class="${editingId === t.id ? 'active' : ''}">
+          <div>
+            <div class="trip-name">${t.name}</div>
+            <div class="trip-price">${t.price}</div>
+          </div>
+          <button class="del-btn" data-id="${t.id}" title="Delete">✕</button>
+        </li>
+      `).join('');
+
+      list.querySelectorAll('li').forEach(li => {
+        li.addEventListener('click', e => {
+          if (e.target.classList.contains('del-btn')) return;
+          openEdit(li.dataset.id);
+        });
+      });
+
+      list.querySelectorAll('.del-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+          e.stopPropagation();
+          confirmDelete(btn.dataset.id);
+        });
+      });
+    }
+
+    // ── FORM BUILDER ─────────────────────────────────────────────────────────
+    function openEdit(id) {
+      editingId = id;
+      const trip = trips.find(t => t.id === id);
+      renderForm(trip);
+      renderSidebar();
+    }
+
+    function openAdd() {
+      editingId = null;
+      renderForm(null);
+      renderSidebar();
+    }
+
+    function renderForm(trip) {
+      const isNew = !trip;
+      const t = trip || {
+        id: '', name: '', title: '', badge: '', price: '', heroImage: '',
+        images: ['', '', ''], description: '', duration: '', type: 'Group / FIT',
+        location: '', category: 'North Indian Destinations', groupSize: 'Unlimited',
+        minAge: 'All Ages', destinations: '', rating: '', travelers: '50+ travelers',
+        days: [{ day: '', detail: '' }],
+        included: [''], excluded: ['']
+      };
+
+      document.getElementById('main').innerHTML = `
+        <h2>${isNew ? 'Add new trip' : 'Edit: ' + t.name}</h2>
+        <div class="form-grid" id="tripForm">
+
+          <div class="section-label">Basic info</div>
+
+          <div class="form-group">
+            <label>Trip ID (URL slug)</label>
+            <input id="f-id" value="${t.id}" placeholder="e.g. srinagar-city" ${isNew ? '' : 'readonly style="background:#f3f4f6;color:#9ca3af"'} />
+          </div>
+          <div class="form-group">
+            <label>Trip name</label>
+            <input id="f-name" value="${t.name}" placeholder="e.g. Srinagar City Tour" />
+          </div>
+          <div class="form-group">
+            <label>Title (uppercase)</label>
+            <input id="f-title" value="${t.title}" placeholder="e.g. SRINAGAR CITY" />
+          </div>
+          <div class="form-group">
+            <label>Badge (card label)</label>
+            <input id="f-badge" value="${t.badge}" placeholder="e.g. SRINAGAR CITY" />
+          </div>
+          <div class="form-group">
+            <label>Price</label>
+            <input id="f-price" value="${t.price}" placeholder="e.g. ₹15,900" />
+          </div>
+          <div class="form-group">
+            <label>Rating</label>
+            <input id="f-rating" value="${t.rating}" placeholder="e.g. 4.8" />
+          </div>
+          <div class="form-group">
+            <label>Duration</label>
+            <input id="f-duration" value="${t.duration}" placeholder="e.g. 3 NIGHTS, 4 DAYS" />
+          </div>
+          <div class="form-group">
+            <label>Travelers</label>
+            <input id="f-travelers" value="${t.travelers}" placeholder="e.g. 50+ travelers" />
+          </div>
+          <div class="form-group">
+            <label>Location</label>
+            <input id="f-location" value="${t.location}" placeholder="e.g. Srinagar, Kashmir" />
+          </div>
+          <div class="form-group">
+            <label>Destinations</label>
+            <input id="f-destinations" value="${t.destinations}" placeholder="e.g. SRINAGAR · DAL LAKE" />
+          </div>
+          <div class="form-group">
+            <label>Type</label>
+            <input id="f-type" value="${t.type}" />
+          </div>
+          <div class="form-group">
+            <label>Category</label>
+            <input id="f-category" value="${t.category}" />
+          </div>
+          <div class="form-group">
+            <label>Group size</label>
+            <input id="f-groupSize" value="${t.groupSize}" />
+          </div>
+          <div class="form-group">
+            <label>Min age</label>
+            <input id="f-minAge" value="${t.minAge}" />
+          </div>
+
+          <div class="section-label">Images</div>
+
+          ${imagePickerField('f-heroImage', 'Hero image', t.heroImage)}
+          ${imagePickerField('f-img0', 'Gallery image 1', t.images[0] || '')}
+          ${imagePickerField('f-img1', 'Gallery image 2', t.images[1] || '')}
+          ${imagePickerField('f-img2', 'Gallery image 3', t.images[2] || '')}
+
+          <div class="section-label">Description</div>
+
+          <div class="form-group full">
+            <label>Description</label>
+            <textarea id="f-description" rows="4">${t.description}</textarea>
+          </div>
+
+          <div class="section-label">Itinerary</div>
+
+          <div class="dynamic-list" id="days-list">
+            <div class="list-header">
+              <label>Day-by-day plan</label>
+              <button class="add-item-btn" id="addDayBtn">+ Add day</button>
+            </div>
+            <div id="days-items">
+              ${t.days.map((d, i) => dayRow(d.day, d.detail, i)).join('')}
+            </div>
+          </div>
+
+          <div class="section-label">Inclusions & Exclusions</div>
+
+          <div class="dynamic-list">
+            <div class="list-header">
+              <label>What's included</label>
+              <button class="add-item-btn" id="addIncBtn">+ Add item</button>
+            </div>
+            <div id="inc-items">
+              ${t.included.map((v, i) => listRow('inc', v, i)).join('')}
+            </div>
+          </div>
+
+          <div class="dynamic-list">
+            <div class="list-header">
+              <label>What's not included</label>
+              <button class="add-item-btn" id="addExcBtn">+ Add item</button>
+            </div>
+            <div id="exc-items">
+              ${t.excluded.map((v, i) => listRow('exc', v, i)).join('')}
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn-save" id="saveBtn">${isNew ? 'Create trip' : 'Save changes'}</button>
+            <button class="btn-cancel" id="cancelBtn">Cancel</button>
+          </div>
+
+        </div>
+      `;
+
+      document.getElementById('addDayBtn').addEventListener('click', () => {
+        const container = document.getElementById('days-items');
+        const idx = container.children.length;
+        container.insertAdjacentHTML('beforeend', dayRow('', '', idx));
+        bindRemove();
+      });
+
+      document.getElementById('addIncBtn').addEventListener('click', () => {
+        const container = document.getElementById('inc-items');
+        const idx = container.children.length;
+        container.insertAdjacentHTML('beforeend', listRow('inc', '', idx));
+        bindRemove();
+      });
+
+      document.getElementById('addExcBtn').addEventListener('click', () => {
+        const container = document.getElementById('exc-items');
+        const idx = container.children.length;
+        container.insertAdjacentHTML('beforeend', listRow('exc', '', idx));
+        bindRemove();
+      });
+
+      document.getElementById('saveBtn').addEventListener('click', () => saveTrip(isNew));
+      document.getElementById('cancelBtn').addEventListener('click', () => {
+        editingId = null;
+        renderSidebar();
+        document.getElementById('main').innerHTML = `<div class="empty-state"><div style="font-size:48px">🏔️</div><p>Select a trip to edit, or click <strong>Add new trip</strong></p></div>`;
+      });
+
+      bindRemove();
+      bindImagePickers();
+    }
+
+    function imagePickerField(id, label, value) {
+      const has = !!value;
+      const previewStyle = has ? `style="background-image:url('${esc(value)}')"` : '';
+      return `
+        <div class="form-group full">
+          <label>${label}</label>
+          <div class="img-picker" data-target="${id}">
+            <div class="img-preview ${has ? 'has-image' : ''}" id="${id}-preview" ${previewStyle}>
+              ${has ? '' : 'No image'}
+              <button type="button" class="clear-img" title="Clear">✕</button>
+            </div>
+            <div class="img-picker-controls">
+              <button type="button" class="pick-btn">Choose image…</button>
+              <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" />
+              <input class="path-input" id="${id}" value="${esc(value)}" placeholder="Public/my-image.png or https://..." />
+              <span class="hint">Pick a file to upload, or paste a path / URL</span>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function setPreview(targetId, url) {
+      const preview = document.getElementById(`${targetId}-preview`);
+      if (!preview) return;
+      const clearBtn = preview.querySelector('.clear-img');
+      [...preview.childNodes].forEach(n => {
+        if (n.nodeType === Node.TEXT_NODE) n.remove();
+      });
+      if (url) {
+        preview.classList.add('has-image');
+        preview.style.backgroundImage = `url('${url}')`;
+      } else {
+        preview.classList.remove('has-image');
+        preview.style.backgroundImage = '';
+        preview.insertBefore(document.createTextNode('No image'), clearBtn);
+      }
+    }
+
+    function bindImagePickers() {
+      document.querySelectorAll('.img-picker').forEach(picker => {
+        const targetId = picker.dataset.target;
+        const pathInput = document.getElementById(targetId);
+        const fileInput = picker.querySelector('input[type="file"]');
+        const pickBtn = picker.querySelector('.pick-btn');
+        const clearBtn = picker.querySelector('.clear-img');
+
+        pickBtn.addEventListener('click', () => fileInput.click());
+
+        pathInput.addEventListener('input', () => {
+          setPreview(targetId, pathInput.value.trim());
+        });
+
+        clearBtn.addEventListener('click', e => {
+          e.stopPropagation();
+          pathInput.value = '';
+          fileInput.value = '';
+          setPreview(targetId, '');
+        });
+
+        fileInput.addEventListener('change', async () => {
+          const file = fileInput.files && fileInput.files[0];
+          if (!file) return;
+
+          pickBtn.disabled = true;
+          pickBtn.textContent = 'Uploading…';
+
+          try {
+            const form = new FormData();
+            form.append('image', file);
+            const res = await fetch('/api/upload', { method: 'POST', body: form });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Upload failed');
+
+            pathInput.value = data.path;
+            setPreview(targetId, data.path);
+            showToast('Image uploaded');
+          } catch (err) {
+            showToast(err.message || 'Upload failed', true);
+          } finally {
+            pickBtn.disabled = false;
+            pickBtn.textContent = 'Choose image…';
+            fileInput.value = '';
+          }
+        });
+      });
+    }
+
+    function dayRow(day, detail, i) {
+      return `<div class="day-item list-item">
+        <input placeholder="Day ${i+1}: TITLE" value="${esc(day)}" class="day-title" />
+        <textarea placeholder="What happens this day..." class="day-detail" rows="2">${esc(detail)}</textarea>
+        <button class="remove-item" title="Remove">✕</button>
+      </div>`;
+    }
+
+    function listRow(type, val, i) {
+      return `<div class="list-item">
+        <input value="${esc(val)}" placeholder="Enter item..." class="${type}-val" />
+        <button class="remove-item" title="Remove">✕</button>
+      </div>`;
+    }
+
+    function esc(str) {
+      return (str || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+    }
+
+    function bindRemove() {
+      document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.onclick = () => btn.closest('.list-item, .day-item').remove();
+      });
+    }
+
+    // ── SAVE ─────────────────────────────────────────────────────────────────
+    async function saveTrip(isNew) {
+      const days = [...document.querySelectorAll('#days-items .day-item')].map(row => ({
+        day: row.querySelector('.day-title').value.trim(),
+        detail: row.querySelector('.day-detail').value.trim()
+      })).filter(d => d.day);
+
+      const included = [...document.querySelectorAll('#inc-items .inc-val')].map(i => i.value.trim()).filter(Boolean);
+      const excluded = [...document.querySelectorAll('#exc-items .exc-val')].map(i => i.value.trim()).filter(Boolean);
+
+      const trip = {
+        id:           document.getElementById('f-id').value.trim(),
+        name:         document.getElementById('f-name').value.trim(),
+        title:        document.getElementById('f-title').value.trim(),
+        badge:        document.getElementById('f-badge').value.trim(),
+        price:        document.getElementById('f-price').value.trim(),
+        rating:       document.getElementById('f-rating').value.trim(),
+        heroImage:    document.getElementById('f-heroImage').value.trim(),
+        images:       [
+          document.getElementById('f-img0').value.trim(),
+          document.getElementById('f-img1').value.trim(),
+          document.getElementById('f-img2').value.trim()
+        ],
+        description:  document.getElementById('f-description').value.trim(),
+        duration:     document.getElementById('f-duration').value.trim(),
+        travelers:    document.getElementById('f-travelers').value.trim(),
+        type:         document.getElementById('f-type').value.trim(),
+        location:     document.getElementById('f-location').value.trim(),
+        category:     document.getElementById('f-category').value.trim(),
+        groupSize:    document.getElementById('f-groupSize').value.trim(),
+        minAge:       document.getElementById('f-minAge').value.trim(),
+        destinations: document.getElementById('f-destinations').value.trim(),
+        days, included, excluded
+      };
+
+      if (!trip.id || !trip.name || !trip.price) {
+        showToast('ID, name and price are required', true);
+        return;
+      }
+
+      const method = isNew ? 'POST' : 'PUT';
+      const url = isNew ? API : `${API}/${trip.id}`;
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(trip)
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        showToast(err.error || 'Error saving trip', true);
+        return;
+      }
+
+      showToast(isNew ? 'Trip created!' : 'Changes saved!');
+      editingId = trip.id;
+      await loadTrips();
+      renderSidebar();
+    }
+
+    // ── DELETE ────────────────────────────────────────────────────────────────
+    function confirmDelete(id) {
+      const trip = trips.find(t => t.id === id);
+      pendingDeleteId = id;
+      document.getElementById('confirmMsg').textContent = `Delete "${trip.name}"? This cannot be undone.`;
+      document.getElementById('confirmOverlay').style.display = 'flex';
+    }
+
+    document.getElementById('confirmDelBtn').addEventListener('click', async () => {
+      document.getElementById('confirmOverlay').style.display = 'none';
+      await fetch(`${API}/${pendingDeleteId}`, { method: 'DELETE' });
+      if (editingId === pendingDeleteId) {
+        editingId = null;
+        document.getElementById('main').innerHTML = `<div class="empty-state"><div style="font-size:48px">🏔️</div><p>Select a trip to edit, or click <strong>Add new trip</strong></p></div>`;
+      }
+      showToast('Trip deleted');
+      await loadTrips();
+    });
+
+    document.getElementById('confirmCancelBtn').addEventListener('click', () => {
+      document.getElementById('confirmOverlay').style.display = 'none';
+    });
+
+    // ── TOAST ─────────────────────────────────────────────────────────────────
+    function showToast(msg, isError = false) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'toast show' + (isError ? ' error' : '');
+      setTimeout(() => t.className = 'toast', 2800);
+    }
+
+    // ── INIT ──────────────────────────────────────────────────────────────────
+    document.getElementById('addBtn').addEventListener('click', openAdd);
+    loadTrips();
+  </script>
+</body>
+</html>

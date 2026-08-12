@@ -1,0 +1,119 @@
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+const multer = require('multer');
+
+const app = express();
+const PORT = 3000;
+const DATA_FILE = path.join(__dirname, 'trips-data.json');
+const PUBLIC_DIR = path.join(__dirname, 'Public');
+
+if (!fs.existsSync(PUBLIC_DIR)) {
+  fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, PUBLIC_DIR),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
+    const base = path
+      .basename(file.originalname, path.extname(file.originalname))
+      .replace(/[^a-z0-9-_]/gi, '-')
+      .replace(/-+/g, '-')
+      .toLowerCase() || 'image';
+    cb(null, `${base}-${Date.now()}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(jpeg|jpg|png|gif|webp)$/i.test(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed (jpg, png, gif, webp)'));
+    }
+  }
+});
+
+app.use(express.json());
+app.use(express.static(__dirname));
+
+// Allow requests from the same machine (admin page)
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  next();
+});
+
+function readTrips() {
+  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+}
+
+function writeTrips(trips) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(trips, null, 2), 'utf8');
+}
+
+// POST upload image → Public/
+app.post('/api/upload', (req, res) => {
+  upload.single('image')(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'Upload failed' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file provided' });
+    }
+    res.json({ path: `Public/${req.file.filename}` });
+  });
+});
+
+// GET all trips
+app.get('/api/trips', (req, res) => {
+  res.json(readTrips());
+});
+
+// GET single trip
+app.get('/api/trips/:id', (req, res) => {
+  const trip = readTrips().find(t => t.id === req.params.id);
+  if (!trip) return res.status(404).json({ error: 'Trip not found' });
+  res.json(trip);
+});
+
+// POST new trip
+app.post('/api/trips', (req, res) => {
+  const trips = readTrips();
+  const trip = req.body;
+  if (!trip.id || trips.find(t => t.id === trip.id)) {
+    return res.status(400).json({ error: 'Missing or duplicate trip id' });
+  }
+  trips.push(trip);
+  writeTrips(trips);
+  res.status(201).json(trip);
+});
+
+// PUT update trip
+app.put('/api/trips/:id', (req, res) => {
+  const trips = readTrips();
+  const idx = trips.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Trip not found' });
+  trips[idx] = { ...trips[idx], ...req.body, id: req.params.id };
+  writeTrips(trips);
+  res.json(trips[idx]);
+});
+
+// DELETE trip
+app.delete('/api/trips/:id', (req, res) => {
+  const trips = readTrips();
+  const idx = trips.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Trip not found' });
+  trips.splice(idx, 1);
+  writeTrips(trips);
+  res.json({ success: true });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`Admin panel: http://localhost:${PORT}/admin.html`);
+});
