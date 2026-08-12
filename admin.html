@@ -11,8 +11,9 @@
 
     .topbar { background: #1a6b3c; color: #fff; padding: 14px 32px; display: flex; align-items: center; justify-content: space-between; }
     .topbar h1 { font-size: 18px; font-weight: 700; }
-    .topbar a { color: #a7f3d0; font-size: 14px; text-decoration: none; }
-    .topbar a:hover { color: #fff; }
+    .topbar-actions { display: flex; align-items: center; gap: 16px; }
+    .topbar a, .topbar button.logout-btn { color: #a7f3d0; font-size: 14px; text-decoration: none; background: none; border: none; cursor: pointer; font-family: inherit; }
+    .topbar a:hover, .topbar button.logout-btn:hover { color: #fff; }
 
     .layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 52px); }
 
@@ -25,7 +26,7 @@
     .trip-list li.active { background: #f0fdf4; border-left-color: #1a6b3c; }
     .trip-list li .trip-name { font-size: 14px; font-weight: 500; }
     .trip-list li .trip-price { font-size: 12px; color: #6b7280; }
-    .trip-list li .del-btn { background: none; border: none; cursor: pointer; color: #ef4444; font-size: 16px; padding: 2px 6px; border-radius: 4px; opacity: 0; transition: opacity .15s; }
+    .trip-list li .del-btn { background: none; border: none; cursor: pointer; color: #ef4444; font-size: 16px; padding: 2px 6px; border-radius: 4px; opacity: 0.6; transition: opacity .15s; }
     .trip-list li:hover .del-btn { opacity: 1; }
     .add-btn { display: flex; align-items: center; gap: 8px; margin: 16px 20px 0; padding: 10px 16px; background: #1a6b3c; color: #fff; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; width: calc(100% - 40px); justify-content: center; }
     .add-btn:hover { background: #155c32; }
@@ -64,6 +65,8 @@
     .btn-save:hover { background: #155c32; }
     .btn-cancel { background: #fff; color: #374151; border: 1px solid #d1d5db; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
     .btn-cancel:hover { background: #f9fafb; }
+    .btn-delete { background: #fff; color: #ef4444; border: 1px solid #fecaca; padding: 12px 28px; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-left: auto; }
+    .btn-delete:hover { background: #fef2f2; }
 
     .toast { position: fixed; bottom: 24px; right: 24px; background: #111827; color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 500; opacity: 0; transform: translateY(8px); transition: all .25s; pointer-events: none; z-index: 999; }
     .toast.show { opacity: 1; transform: translateY(0); }
@@ -112,7 +115,10 @@
 
   <div class="topbar">
     <h1>🌿 Travel With Yousuf — Admin</h1>
-    <a href="index.html" target="_blank">View website →</a>
+    <div class="topbar-actions">
+      <a href="index.html" target="_blank">View website →</a>
+      <button class="logout-btn" id="logoutBtn" type="button">Logout</button>
+    </div>
   </div>
 
   <div class="layout">
@@ -146,15 +152,51 @@
 
   <script>
     const API = '/api/trips';
+    const FETCH_OPTS = { credentials: 'include' };
     let trips = [];
     let editingId = null;
     let pendingDeleteId = null;
 
+    function redirectToLogin() {
+      window.location.href = 'login.html';
+    }
+
+    async function requireAuth() {
+      try {
+        const res = await fetch('/api/auth/status', FETCH_OPTS);
+        if (!res.ok) {
+          redirectToLogin();
+          return false;
+        }
+        const data = await res.json();
+        if (!data.authenticated) {
+          redirectToLogin();
+          return false;
+        }
+        return true;
+      } catch (_) {
+        showToast('Could not reach the server. Run npm start first.', true);
+        return false;
+      }
+    }
+
     // ── FETCH & RENDER SIDEBAR ────────────────────────────────────────────────
     async function loadTrips() {
-      const res = await fetch(API);
-      trips = await res.json();
-      renderSidebar();
+      try {
+        const res = await fetch(API, FETCH_OPTS);
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
+        if (!res.ok) {
+          showToast('Failed to load trips', true);
+          return;
+        }
+        trips = await res.json();
+        renderSidebar();
+      } catch (_) {
+        showToast('Could not reach the server. Run npm start first.', true);
+      }
     }
 
     function renderSidebar() {
@@ -323,6 +365,7 @@
           <div class="form-actions">
             <button class="btn-save" id="saveBtn">${isNew ? 'Create trip' : 'Save changes'}</button>
             <button class="btn-cancel" id="cancelBtn">Cancel</button>
+            ${isNew ? '' : '<button class="btn-delete" id="deleteBtn" type="button">Delete trip</button>'}
           </div>
 
         </div>
@@ -355,6 +398,11 @@
         renderSidebar();
         document.getElementById('main').innerHTML = `<div class="empty-state"><div style="font-size:48px">🏔️</div><p>Select a trip to edit, or click <strong>Add new trip</strong></p></div>`;
       });
+
+      const deleteBtn = document.getElementById('deleteBtn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => confirmDelete(t.id));
+      }
 
       bindRemove();
       bindImagePickers();
@@ -429,9 +477,15 @@
           try {
             const form = new FormData();
             form.append('image', file);
-            const res = await fetch('/api/upload', { method: 'POST', body: form });
+            const res = await fetch('/api/upload', { ...FETCH_OPTS, method: 'POST', body: form });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Upload failed');
+            if (!res.ok) {
+              if (res.status === 401) {
+                redirectToLogin();
+                return;
+              }
+              throw new Error(data.error || 'Upload failed');
+            }
 
             pathInput.value = data.path;
             setPreview(targetId, data.path);
@@ -516,12 +570,17 @@
       const url = isNew ? API : `${API}/${trip.id}`;
 
       const res = await fetch(url, {
+        ...FETCH_OPTS,
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(trip)
       });
 
       if (!res.ok) {
+        if (res.status === 401) {
+          redirectToLogin();
+          return;
+        }
         const err = await res.json();
         showToast(err.error || 'Error saving trip', true);
         return;
@@ -541,9 +600,25 @@
       document.getElementById('confirmOverlay').style.display = 'flex';
     }
 
+    async function deleteTrip(id) {
+      const res = await fetch(`${API}/${id}`, { ...FETCH_OPTS, method: 'DELETE' });
+      if (res.status === 401) {
+        redirectToLogin();
+        return false;
+      }
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showToast(err.error || 'Failed to delete trip', true);
+        return false;
+      }
+      return true;
+    }
+
     document.getElementById('confirmDelBtn').addEventListener('click', async () => {
       document.getElementById('confirmOverlay').style.display = 'none';
-      await fetch(`${API}/${pendingDeleteId}`, { method: 'DELETE' });
+      const deleted = await deleteTrip(pendingDeleteId);
+      if (!deleted) return;
+
       if (editingId === pendingDeleteId) {
         editingId = null;
         document.getElementById('main').innerHTML = `<div class="empty-state"><div style="font-size:48px">🏔️</div><p>Select a trip to edit, or click <strong>Add new trip</strong></p></div>`;
@@ -566,7 +641,16 @@
 
     // ── INIT ──────────────────────────────────────────────────────────────────
     document.getElementById('addBtn').addEventListener('click', openAdd);
-    loadTrips();
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { ...FETCH_OPTS, method: 'POST' });
+      redirectToLogin();
+    });
+
+    (async () => {
+      if (await requireAuth()) {
+        await loadTrips();
+      }
+    })();
   </script>
 </body>
 </html>

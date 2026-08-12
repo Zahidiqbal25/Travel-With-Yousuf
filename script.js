@@ -31,10 +31,16 @@ function renderTrips(trips) {
 }
 
 const grid = document.getElementById('trips-grid');
-if (grid) {
+const catTrack = document.getElementById('catTrack');
+if (grid || catTrack) {
   loadTrips()
-    .then(trips => renderTrips(trips))
+    .then(trips => {
+      if (grid) renderTrips(trips);
+      if (catTrack) renderCategoryTrack(trips);
+    })
     .catch(() => {
-      grid.innerHTML = '<p style="text-align:center;color:#666;padding:40px;grid-column:1/-1">Could not load trips.</p>';
+      if (grid) {
+        grid.innerHTML = '<p style="text-align:center;color:#666;padding:40px;grid-column:1/-1">Could not load trips.</p>';
+      }
     });
 }

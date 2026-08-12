@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login – Travel With Yousuf</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      background: #1a6b3c;
+      color: #fff;
+      padding: 14px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar h1 { font-size: 18px; font-weight: 700; }
+    .topbar a { color: #a7f3d0; font-size: 14px; text-decoration: none; }
+    .topbar a:hover { color: #fff; }
+
+    .login-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .login-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    }
+
+    .login-card h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .login-card p {
+      color: #6b7280;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+    }
+
+    input {
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+      transition: border-color .15s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #1a6b3c;
+    }
+
+    .error-msg {
+      background: #fef2f2;
+      color: #dc2626;
+      font-size: 13px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .error-msg.show { display: block; }
+
+    .btn-signin {
+      width: 100%;
+      background: #1a6b3c;
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .btn-signin:hover { background: #155c32; }
+    .btn-signin:disabled { opacity: .6; cursor: wait; }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>🌿 Travel With Yousuf — Admin</h1>
+    <a href="index.html">← Back to website</a>
+  </div>
+
+  <div class="login-wrap">
+    <div class="login-card">
+      <h2>Sign in</h2>
+      <p>Enter your admin credentials to manage trips.</p>
+
+      <div class="error-msg" id="errorMsg"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input id="username" name="username" type="text" autocomplete="username" required />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn-signin" type="submit" id="signInBtn">Sign in</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const FETCH_OPTS = { credentials: 'include' };
+
+    async function checkAlreadyLoggedIn() {
+      try {
+        const res = await fetch('/api/auth/status', FETCH_OPTS);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated) {
+            window.location.href = 'admin.html';
+          }
+        }
+      } catch (_) {}
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const errorEl = document.getElementById('errorMsg');
+      const btn = document.getElementById('signInBtn');
+      errorEl.classList.remove('show');
+
+      btn.disabled = true;
+      btn.textContent = 'Signing in…';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          ...FETCH_OPTS,
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value
+          })
+        });
+
+        if (res.ok) {
+          window.location.href = 'admin.html';
+          return;
+        }
+
+        const data = await res.json().catch(() => ({}));
+        errorEl.textContent = data.error || 'Invalid username or password';
+        errorEl.classList.add('show');
+      } catch (_) {
+        errorEl.textContent = 'Could not reach the server. Run npm start first.';
+        errorEl.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign in';
+      }
+    });
+
+    checkAlreadyLoggedIn();
+  </script>
+</body>
+</html>

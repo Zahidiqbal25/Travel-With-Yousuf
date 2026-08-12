@@ -4,7 +4,7 @@
 async function loadTrips() {
   if (window.location.protocol !== 'file:') {
     try {
-      const res = await fetch('/api/trips');
+      const res = await fetch('/api/trips', { cache: 'no-store' });
       if (res.ok) {
         const data = await res.json();
         if (Array.isArray(data)) return data;
@@ -15,7 +15,7 @@ async function loadTrips() {
   }
 
   const jsonUrl = new URL('trips-data.json', window.location.href);
-  const res = await fetch(jsonUrl);
+  const res = await fetch(jsonUrl, { cache: 'no-store' });
   if (!res.ok) {
     throw new Error(
       window.location.protocol === 'file:'
@@ -29,16 +29,24 @@ async function loadTrips() {
   return data;
 }
 
+function esc(str) {
+  return (str || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/</g, '&lt;');
+}
+
 function tripCardHtml(t) {
-  const hero = (t.heroImage || '').replace(/'/g, '%27');
-  const name = t.name || 'Trip';
-  const badge = t.badge || '';
-  const location = t.location || '';
-  const rating = t.rating || '';
-  const duration = t.duration || '';
-  const travelers = t.travelers || '';
-  const price = t.price || '';
-  const id = t.id || '';
+  const hero = esc(t.heroImage || '');
+  const name = esc(t.name || 'Trip');
+  const badge = esc(t.badge || '');
+  const location = esc(t.location || '');
+  const rating = esc(t.rating || '');
+  const duration = esc(t.duration || '');
+  const travelers = esc(t.travelers || '');
+  const price = esc(t.price || '');
+  const id = esc(t.id || '');
 
   return `
     <div class="trip-card">
@@ -52,4 +60,31 @@ function tripCardHtml(t) {
         <a href="trip.html?id=${id}" class="btn-sm">View trip</a>
       </div>
     </div>`;
+}
+
+function catCardHtml(t) {
+  const hero = esc(t.heroImage || '');
+  const name = esc(t.name || 'Trip');
+  const id = esc(t.id || '');
+  const img = hero
+    ? `<img src="${hero}" alt="${name}" />`
+    : `<div class="cat-card-placeholder"></div>`;
+
+  return `
+    <a class="cat-card" href="trip.html?id=${id}">
+      ${img}
+      <span>${name}</span>
+    </a>`;
+}
+
+function renderCategoryTrack(trips) {
+  const track = document.getElementById('catTrack');
+  if (!track) return;
+  const validTrips = trips.filter(t => t.id && t.name);
+  if (!validTrips.length) {
+    track.innerHTML = '';
+    return;
+  }
+  const cards = validTrips.map(catCardHtml).join('');
+  track.innerHTML = cards + cards;
 }
