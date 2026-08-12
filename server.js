@@ -12,8 +12,8 @@ const PORT = 3000;
 const DATA_FILE = path.join(__dirname, 'trips-data.json');
 const PUBLIC_DIR = path.join(__dirname, 'Public');
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'changeme';
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'yousuf').trim();
+const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'Travel786').trim();
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-session-secret-change-in-production';
 
 if (!fs.existsSync(PUBLIC_DIR)) {
@@ -92,7 +92,8 @@ function writeTrips(trips) {
 }
 
 app.post('/api/auth/login', (req, res) => {
-  const { username, password } = req.body || {};
+  const username = (req.body?.username || '').trim();
+  const password = (req.body?.password || '').trim();
   if (safeEqual(username, ADMIN_USERNAME) && safeEqual(password, ADMIN_PASSWORD)) {
     req.session.authenticated = true;
     return res.json({ success: true });
