@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const multer = require('multer');
 const nodemailer = require('nodemailer');
 
@@ -59,6 +60,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
+    // On Vercel, sessions will be stored in /tmp, which is temporary.
+    // For persistent sessions, a database store (like Redis or Postgres) is recommended for production.
+    store: new FileStore({ path: '/tmp/sessions', logFn: function() {} }),
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',
