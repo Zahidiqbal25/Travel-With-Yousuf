@@ -59,6 +59,9 @@ app.use(session({
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
+  // On Vercel, sessions will be stored in /tmp, which is temporary.
+  // For persistent sessions, a database store (like Redis or Postgres) is recommended for production.
+  store: new FileStore({ path: '/tmp/sessions', logFn: function() {} }),
   cookie: {
     // On Vercel, sessions will be stored in /tmp, which is temporary.
     // For persistent sessions, a database store (like Redis or Postgres) is recommended for production.
