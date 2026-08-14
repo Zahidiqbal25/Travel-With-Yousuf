@@ -6,15 +6,23 @@ const path = require('path');
 const crypto = require('crypto');
 const session = require('express-session');
 const multer = require('multer');
+const nodemailer = require('nodemailer');
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DATA_FILE = path.join(__dirname, 'trips-data.json');
 const PUBLIC_DIR = path.join(__dirname, 'Public');
 
+// In-memory store for reset tokens. In a real-world scenario, use a persistent store like Redis.
+const resetTokens = {};
+
 const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || 'yousuf').trim();
-const ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'Travel786').trim();
+let ADMIN_PASSWORD = (process.env.ADMIN_PASSWORD || 'Travel786').trim();
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || '').trim();
 const SESSION_SECRET = process.env.SESSION_SECRET || 'dev-session-secret-change-in-production';
+
+// Warn if email is not configured
+if (!ADMIN_EMAIL) console.warn('WARNING: ADMIN_EMAIL is not set in .env file. Forgot password feature will not work.');
 
 if (!fs.existsSync(PUBLIC_DIR)) {
   fs.mkdirSync(PUBLIC_DIR, { recursive: true });
@@ -99,6 +107,65 @@ app.post('/api/auth/login', (req, res) => {
     return res.json({ success: true });
   }
   res.status(401).json({ error: 'Invalid username or password' });
+});
+
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const email = (req.body?.email || '').trim();
+
+  if (!ADMIN_EMAIL || !process.env.SMTP_HOST) {
+    return res.status(500).json({ error: 'Email service is not configured on the server.' });
+  }
+
+  if (!safeEqual(email, ADMIN_EMAIL)) {
+    // Still return a success message to prevent user enumeration
+    return res.json({ success: true, message: 'If a user with that email exists, a reset link has been sent.' });
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = Date.now() + 3600000; // 1 hour
+  resetTokens[token] = { email, expires };
+
+  const resetLink = `${req.protocol}://${req.get('host')}/reset-password.html?token=${token}`;
+
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: parseInt(process.env.SMTP_PORT || '587', 10),
+    secure: (parseInt(process.env.SMTP_PORT || '587', 10) === 465), // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  try {
+    await transporter.sendMail({
+      from: `"Admin" <${process.env.SMTP_USER}>`,
+      to: ADMIN_EMAIL,
+      subject: 'Password Reset Request',
+      text: `You requested a password reset. Click this link to reset your password: ${resetLink}`,
+      html: `<p>You requested a password reset. Click this link to reset your password:</p><a href="${resetLink}">${resetLink}</a>`,
+    });
+    res.json({ success: true, message: 'If a user with that email exists, a reset link has been sent.' });
+  } catch (error) {
+    console.error('Error sending password reset email:', error);
+    res.status(500).json({ error: 'Failed to send reset email.' });
+  }
+});
+
+app.post('/api/auth/reset-password', (req, res) => {
+  const { token, password } = req.body;
+  const record = resetTokens[token];
+
+  if (!record || record.expires < Date.now()) {
+    return res.status(400).json({ error: 'Invalid or expired password reset token.' });
+  }
+
+  // Update password in memory
+  ADMIN_PASSWORD = String(password).trim();
+  console.log('Admin password has been updated in memory. This change will be lost on server restart.');
+
+  delete resetTokens[token]; // Invalidate the token
+  res.json({ success: true, message: 'Password has been reset successfully.' });
 });
 
 app.post('/api/auth/logout', (req, res) => {

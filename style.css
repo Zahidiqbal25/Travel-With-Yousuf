@@ -109,13 +109,37 @@ img { max-width: 100%; display: block; }
 .hero {
   background: linear-gradient(135deg, #e8f5ee 0%, #f0faf4 100%);
   padding: 80px 40px 60px;
+  position: relative;
+  background: url('Public/gulmarg.png') no-repeat center center;
+  background-size: cover;
+  color: var(--white);
+  padding: 60px 40px;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 45vh;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), rgba(0,0,0,0.3));
+  z-index: 1;
+}
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 800px;
 }
 .hero-badge {
   display: inline-block;
   background: var(--white);
   border: 1px solid #d1fae5;
   color: var(--green);
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: var(--white);
   font-size: 13px;
   font-weight: 600;
   padding: 6px 16px;
@@ -123,9 +147,12 @@ img { max-width: 100%; display: block; }
   margin-bottom: 24px;
 }
 .hero h1 { font-size: clamp(36px, 6vw, 64px); font-weight: 800; line-height: 1.15; margin-bottom: 32px; }
+.hero h1 { font-size: clamp(38px, 6vw, 68px); font-weight: 800; line-height: 1.2; margin-bottom: 16px; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
 .hero h1 span { color: var(--green); }
 .hero-stats { display: flex; justify-content: center; gap: 48px; margin-bottom: 32px; flex-wrap: wrap; }
 .hero-sub { margin-top: 16px; color: var(--gray); font-size: 14px; }
+.hero-sub { font-size: 18px; color: #e5e7eb; max-width: 600px; margin: 0 auto 32px; line-height: 1.6; }
+.hero-btns { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
 
 /* ABOUT STRIP */
 .about-strip {
@@ -346,6 +373,7 @@ img { max-width: 100%; display: block; }
 
   .hero { padding: 48px 20px 36px; }
   .hero h1 { font-size: 32px; }
+  .hero h1 { font-size: 34px; }
   .hero-stats { gap: 20px; }
   .hero-stats .stat strong { font-size: 22px; }
   .btn-primary, .btn-outline { padding: 11px 22px; font-size: 14px; }
@@ -388,6 +416,7 @@ img { max-width: 100%; display: block; }
   .topbar { display: none; }
   .hero { padding: 40px 16px 28px; }
   .hero h1 { font-size: 28px; }
+  .hero h1 { font-size: 30px; }
   .hero-stats { gap: 16px; }
   .hero-badge { font-size: 11px; padding: 5px 12px; }
 
