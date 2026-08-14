@@ -111,6 +111,7 @@ img { max-width: 100%; display: block; }
   padding: 80px 40px 60px;
   position: relative;
   background: url('Public/gulmarg.png') no-repeat center center;
+  background: url('Public/hero.png') no-repeat center center;
   background-size: cover;
   color: var(--white);
   padding: 60px 40px;
