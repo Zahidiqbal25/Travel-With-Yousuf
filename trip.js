@@ -69,4 +69,11 @@ function renderTrip(trip) {
       </div>
     </div>
   `).join('');
+
+  const bookTripBtn = document.getElementById('bookTripBtn');
+  if (bookTripBtn) {
+    const message = `Hello! I'm interested in booking the "${trip.name}" trip.`;
+    const whatsappUrl = `https://wa.me/916005944808?text=${encodeURIComponent(message)}`;
+    bookTripBtn.href = whatsappUrl;
+  }
 }
