@@ -157,10 +157,7 @@
     let editingId = null;
     let pendingDeleteId = null;
 
-    function redirectToLogin() {
-      window.location.href = 'login.html';
-    }
-
+    
     async function requireAuth() {
       try {
         const res = await fetch('/api/auth/status', FETCH_OPTS);
