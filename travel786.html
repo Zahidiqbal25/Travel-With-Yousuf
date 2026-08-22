@@ -117,7 +117,6 @@
     <h1>🌿 Travel With Yousuf — Admin</h1>
     <div class="topbar-actions">
       <a href="index.html" target="_blank">View website →</a>
-      <button class="logout-btn" id="logoutBtn" type="button">Logout</button>
     </div>
   </div>
 
@@ -157,37 +156,10 @@
     let editingId = null;
     let pendingDeleteId = null;
 
-    function redirectToLogin() {
-      window.location.href = 'login.html';
-    }
-
-    async function requireAuth() {
-      try {
-        const res = await fetch('/api/auth/status', FETCH_OPTS);
-        if (!res.ok) {
-          redirectToLogin();
-          return false;
-        }
-        const data = await res.json();
-        if (!data.authenticated) {
-          redirectToLogin();
-          return false;
-        }
-        return true;
-      } catch (_) {
-        showToast('Could not reach the server. Run npm start first.', true);
-        return false;
-      }
-    }
-
     // ── FETCH & RENDER SIDEBAR ────────────────────────────────────────────────
     async function loadTrips() {
       try {
         const res = await fetch(API, FETCH_OPTS);
-        if (res.status === 401) {
-          redirectToLogin();
-          return;
-        }
         if (!res.ok) {
           showToast('Failed to load trips', true);
           return;
@@ -480,10 +452,6 @@
             const res = await fetch('/api/upload', { ...FETCH_OPTS, method: 'POST', body: form });
             const data = await res.json();
             if (!res.ok) {
-              if (res.status === 401) {
-                redirectToLogin();
-                return;
-              }
               throw new Error(data.error || 'Upload failed');
             }
 
@@ -577,10 +545,6 @@
       });
 
       if (!res.ok) {
-        if (res.status === 401) {
-          redirectToLogin();
-          return;
-        }
         const err = await res.json();
         showToast(err.error || 'Error saving trip', true);
         return;
@@ -602,10 +566,6 @@
 
     async function deleteTrip(id) {
       const res = await fetch(`${API}/${id}`, { ...FETCH_OPTS, method: 'DELETE' });
-      if (res.status === 401) {
-        redirectToLogin();
-        return false;
-      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         showToast(err.error || 'Failed to delete trip', true);
@@ -641,15 +601,9 @@
 
     // ── INIT ──────────────────────────────────────────────────────────────────
     document.getElementById('addBtn').addEventListener('click', openAdd);
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await fetch('/api/auth/logout', { ...FETCH_OPTS, method: 'POST' });
-      redirectToLogin();
-    });
 
     (async () => {
-      if (await requireAuth()) {
-        await loadTrips();
-      }
+      await loadTrips();
     })();
   </script>
 </body>
